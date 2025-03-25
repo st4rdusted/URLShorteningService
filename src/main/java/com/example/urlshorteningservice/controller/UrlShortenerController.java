@@ -1,18 +1,16 @@
 package com.example.urlshorteningservice.controller;
 import com.example.urlshorteningservice.service.UrlShortenerService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(value = "/urlShortener")
 public class UrlShortenerController {
     private final UrlShortenerService urlShortenerService;
-    public UrlShortenerController(UrlShortenerService urlShortenerService) {
-        this.urlShortenerService = urlShortenerService;
-    }
 
     @PostMapping
     public String shortenUrl(@RequestParam String url) {
@@ -20,7 +18,7 @@ public class UrlShortenerController {
     }
     @GetMapping("/{shortCode}")
     public void redirect(@PathVariable String shortCode, HttpServletResponse response) throws IOException {
-        String longUrl = urlShortenerService.getOriginalUrl(shortCode);
-        response.sendRedirect(longUrl);
+        String originalUrl = urlShortenerService.getOriginalUrl(shortCode);
+        response.sendRedirect(originalUrl);
     }
 }
