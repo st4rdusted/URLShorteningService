@@ -1,23 +1,34 @@
 package com.example.urlshorteningservice.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+import java.util.Date;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Builder
 @Table(name = "urls")
 public class Url {
     @Id
     public String shortCode;
     public String longUrl;
+    public Date createdAt;
+    public Date updatedAt;
 
     public Url(String shortCode, String longUrl) {
         this.shortCode = shortCode;
         this.longUrl = longUrl;
     }
+
+    @PrePersist
+    void createdAt() {
+        this.createdAt = this.updatedAt = new Date();
+    }
+
+    @PreUpdate
+    void updatedAt() {
+        this.updatedAt = new Date();
+    }
 }
+

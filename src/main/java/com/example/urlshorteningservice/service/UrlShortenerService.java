@@ -3,7 +3,6 @@ package com.example.urlshorteningservice.service;
 import com.example.urlshorteningservice.dto.Url;
 import com.example.urlshorteningservice.repository.UrlRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
@@ -11,22 +10,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UrlShortenerService {
     private final UrlRepository urlRepository;
-    private final RandomStringGeneratorService randomStringGeneratorService = new RandomStringGeneratorService();
+    private final RandomStringGeneratorService randomStringGeneratorService;
 
-    public String shortenUrl(String url) {
+    public String shortenUrl(String longUrl) {
         String shortCode = randomStringGeneratorService.generateRandomCode();
         if(urlRepository.existsById(shortCode)){
-            return HttpStatus.BAD_REQUEST.getReasonPhrase(); //TODO rewrite
+            shortenUrl(longUrl);
         }
-        urlRepository.save(new Url(shortCode, url));
-        return "http://localhost:8080/urlShortener/" + shortCode;
+        String shortUrl = "http://localhost:8080/urlShortener/" + shortCode;
+        urlRepository.save(new Url(shortCode, longUrl));
+        return shortUrl;
     }
 
-    public String getOriginalUrl(String shortCode) {
+    public Optional<Url> getOriginalUrl(String shortCode) {
         Optional<Url> url = urlRepository.findById(shortCode);
         if (url.isEmpty()) {
-            return HttpStatus.NOT_FOUND.getReasonPhrase();
+            return Optional.empty();
         }
-        return "https://" + url.get().getLongUrl();
+
+        return url;
     }
 }
