@@ -23,11 +23,6 @@ public class UrlShortenerService {
     }
 
     public Optional<Url> getOriginalUrl(String shortCode) {
-        Optional<Url> url = urlRepository.findById(shortCode);
-        if (url.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return url;
+        return urlRepository.findById(shortCode);
     }
 }

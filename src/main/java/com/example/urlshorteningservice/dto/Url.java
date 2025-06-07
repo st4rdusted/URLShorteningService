@@ -15,6 +15,7 @@ public class Url {
     public String longUrl;
     public Date createdAt;
     public Date updatedAt;
+    public int accessCount;
 
     public Url(String shortCode, String longUrl) {
         this.shortCode = shortCode;

@@ -21,7 +21,8 @@ RUN ./gradlew clean build -x test
 
 # Stage 2: Run the application
 FROM openjdk:21-jdk-slim
-
+# Remote debugging
+ENV JAVA_TOOL_OPTIONS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 # Set working directory
 WORKDIR /app
 
@@ -29,7 +30,7 @@ WORKDIR /app
 COPY --from=build /home/app/build/libs/*.jar app.jar
 
 # Expose port (match your application port, e.g., 8080)
-EXPOSE 8080
+EXPOSE 8080 5005
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,10 +1,13 @@
 package com.example.urlshorteningservice.controller;
 import com.example.urlshorteningservice.dto.Url;
+import com.example.urlshorteningservice.repository.UrlRepository;
 import com.example.urlshorteningservice.service.UrlShortenerService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +18,13 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/urlShortener")
 public class UrlShortenerController {
     private final UrlShortenerService urlShortenerService;
+    private final UrlRepository urlRepository;
+    private final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
 
     @PostMapping
     public ResponseEntity<String> shortenUrl(@RequestParam String url) {
@@ -41,38 +44,43 @@ public class UrlShortenerController {
     @Hidden
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
-        Optional<Url> originalUrl = urlShortenerService.getOriginalUrl(shortCode);
-        if (originalUrl.isEmpty()) {
+        Optional<Url> optionalUrl = urlShortenerService.getOriginalUrl(shortCode);
+        if (optionalUrl.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .build();
         }
+        Url originalUrl = optionalUrl.get();
+
+        originalUrl.setAccessCount(originalUrl.getAccessCount() + 1);
+        urlRepository.save(originalUrl);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create(originalUrl.get().longUrl));
+        headers.setLocation(URI.create(originalUrl.longUrl));
 
         return ResponseEntity
-                .status(HttpStatus.MOVED_PERMANENTLY)
+                .status(HttpStatus.PERMANENT_REDIRECT)
                 .headers(headers)
                 .build();
     }
 
     @GetMapping("/{shortCode}/statistics")
     public ResponseEntity<String> getStatistics(@PathVariable String shortCode) {
-        Optional<Url> originalUrl = urlShortenerService.getOriginalUrl(shortCode);
-        if (originalUrl.isEmpty()) {
+        Optional<Url> optionalUrl = urlShortenerService.getOriginalUrl(shortCode);
+        if (optionalUrl.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .build();
         }
+        Url originalUrl = optionalUrl.get();
 
         ObjectMapper Obj = new ObjectMapper();
         String json = null;
         try {
-            json = Obj.writeValueAsString(originalUrl.get());
+            json = Obj.writeValueAsString(originalUrl);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
 
         return ResponseEntity
